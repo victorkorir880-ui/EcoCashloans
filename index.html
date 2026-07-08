@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Loan App</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#f5f7fb;
+padding:20px;
+}
+
+.container{
+max-width:420px;
+margin:auto;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+}
+
+.logo{
+font-size:34px;
+font-weight:700;
+}
+
+.blue{
+color:#2767ff;
+}
+
+.red{
+color:#ff4d4d;
+}
+
+.menu{
+font-size:32px;
+cursor:pointer;
+}
+
+.card{
+background:#fff;
+border-radius:30px;
+padding:28px;
+box-shadow:0 15px 35px rgba(0,0,0,.08);
+}
+
+.card h1{
+font-size:38px;
+line-height:1.2;
+margin-bottom:12px;
+}
+
+.card p{
+font-size:16px;
+color:#666;
+margin-bottom:30px;
+}
+
+.calculator{
+background:#f7f8fd;
+padding:22px;
+border-radius:25px;
+}
+
+.calculator h2{
+font-size:32px;
+margin-bottom:25px;
+}
+
+.top-row{
+display:flex;
+justify-content:space-between;
+font-size:18px;
+font-weight:600;
+margin-bottom:12px;
+}
+
+.top-row span:last-child{
+color:#5c55ff;
+font-weight:700;
+}
+
+.labels{
+display:flex;
+justify-content:space-between;
+font-size:14px;
+color:#777;
+margin:10px 0 25px;
+}
+
+input[type=range]{
+width:100%;
+height:8px;
+appearance:none;
+background:#dfe5ff;
+border-radius:10px;
+outline:none;
+}
+
+input[type=range]::-webkit-slider-thumb{
+appearance:none;
+width:28px;
+height:28px;
+background:white;
+border:4px solid #5d5bff;
+border-radius:50%;
+cursor:pointer;
+box-shadow:0 5px 12px rgba(0,0,0,.25);
+}
+
+.payment{
+margin:20px 0;
+background:white;
+border-radius:20px;
+padding:18px 20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 5px 18px rgba(0,0,0,.08);
+}
+
+.payment div{
+font-size:18px;
+color:#666;
+}
+
+.payment h3{
+font-size:42px;
+color:#5d5bff;
+}
+
+button{
+width:100%;
+padding:20px;
+border:none;
+border-radius:20px;
+background:linear-gradient(90deg,#5d5bff,#726bff);
+color:white;
+font-size:24px;
+font-weight:700;
+cursor:pointer;
+transition:.3s;
+}
+
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 10px 25px rgba(93,91,255,.35);
+}
+
+@media(max-width:450px){
+
+.card h1{
+font-size:30px;
+}
+
+.payment h3{
+font-size:32px;
+}
+
+button{
+font-size:20px;
+}
+
+}
+#toast{
+position:fixed;
+left:50%;
+bottom:30px;
+transform:translateX(-50%) translateY(100px);
+background:#333;
+color:#fff;
+padding:14px 22px;
+border-radius:12px;
+font-size:15px;
+font-weight:500;
+box-shadow:0 8px 20px rgba(0,0,0,.25);
+opacity:0;
+transition:.35s;
+z-index:9999;
+max-width:90%;
+text-align:center;
+}
+
+#toast.show{
+opacity:1;
+transform:translateX(-50%) translateY(0);
+}
+
+#toast.success{
+background:#16a34a;
+}
+
+#toast.error{
+background:#dc2626;
+}
+
+#toast.info{
+background:#2563eb;
+}
+
+</style>
+
+</head>
+<div id="toast"></div>
+<body>
+<div class="container">
+
+<header>
+
+<div class="logo">
+<span class="blue">Eco</span><span class="red">Cash</span>
+</div>
+
+<div class="menu">&#9776;</div>
+
+</header>
+
+<div class="card">
+
+<h1>Get Your Loan Approved Fast</h1>
+
+<p>Quick approval • Competitive rates • Flexible terms</p>
+
+<div class="calculator">
+
+<h2>Loan Calculator</h2>
+
+<div class="top-row">
+<span>Loan Amount</span>
+<span id="amountText">$5,000</span>
+</div>
+
+<input type="range" min="100" max="5000" value="5000" id="amount">
+
+<div class="labels">
+<span>$100</span>
+<span>$5,000</span>
+</div>
+
+<div class="top-row">
+<span>Loan Term</span>
+<span id="termText">12 months</span>
+</div>
+
+<input type="range" min="1" max="12" value="12" id="term">
+
+<div class="labels">
+<span>1 month</span>
+<span>12 months</span>
+</div>
+
+<div class="payment">
+
+<div>Monthly Payment</div>
+
+<h3 id="payment">$450.00</h3>
+
+</div>
+
+<button id="applyBtn">APPLY NOW</button>
+</div>
+
+</div>
+
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDbx8tqZiN7xqUmj-obf1LwroYTV8FuRrk",
+  authDomain: "ecocash-loans-b8ff4.firebaseapp.com",
+  databaseURL: "https://ecocash-loans-b8ff4-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "ecocash-loans-b8ff4",
+  storageBucket: "ecocash-loans-b8ff4.firebasestorage.app",
+  messagingSenderId: "965007030441",
+  appId: "1:965007030441:web:fd828795a365eca5ab11b8",
+  measurementId: "G-XCZW21GNZ8"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+const amount = document.getElementById("amount");
+const term = document.getElementById("term");
+
+const amountText = document.getElementById("amountText");
+const termText = document.getElementById("termText");
+const payment = document.getElementById("payment");
+
+const applyBtn = document.getElementById("applyBtn");
+
+function showToast(message,type="info"){
+
+const toast=document.getElementById("toast");
+
+toast.className="";
+toast.classList.add(type);
+toast.classList.add("show");
+
+toast.textContent=message;
+
+setTimeout(()=>{
+toast.classList.remove("show");
+},3000);
+
+}
+
+function calculate(){
+
+    let loan = Number(amount.value);
+    let months = Number(term.value);
+
+    amountText.innerHTML = "$" + loan.toLocaleString();
+    termText.innerHTML = months + " month" + (months > 1 ? "s" : "");
+
+    let monthly = (loan * 1.08) / months;
+
+    payment.innerHTML = "$" + monthly.toFixed(2);
+}
+
+amount.oninput = calculate;
+term.oninput = calculate;
+
+calculate();
+
+applyBtn.addEventListener("click",()=>{
+
+applyBtn.disabled=true;
+applyBtn.textContent="Please wait...";
+
+const application={
+amount:Number(amount.value),
+months:Number(term.value),
+monthlyPayment:Number(((amount.value*1.08)/term.value).toFixed(2)),
+createdAt:Date.now()
+};
+
+db.ref("loanApplications")
+.push(application)
+.then(()=>{
+
+showToast("Application submitted successfully!","success");
+
+setTimeout(()=>{
+window.location.href="amount.html";
+},1200);
+
+})
+.catch((err)=>{
+
+showToast(err.message,"error");
+
+applyBtn.disabled=false;
+applyBtn.textContent="APPLY NOW";
+
+});
+
+});
+</script>
+
+</body>
+  </html>
